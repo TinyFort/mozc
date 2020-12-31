@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: AGPL-3.0
+// Copyright (C) 2019-2020 Coooooooozy
+
+{
+    "name": "Remote Container for Kurage",
+    "dockerComposeFile": [
+        "../docker/docker-compose.yml",
+        "../docker/docker-compose.personal.yml",
+        "../docker/docker-compose.private.yml",
+        "docker-compose.remote.yml",
+    ],
+    "service": "dev",
+    "workspaceFolder": "/home/builder/workspace/kurage",
+    "initializeCommand": [
+        "bash", "./docker/setup.sh"
+    ],
+    "extensions": [
+        "mhutchie.git-graph"
+    ],
+}
