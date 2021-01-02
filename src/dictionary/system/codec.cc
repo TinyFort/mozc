@@ -1,4 +1,5 @@
 // Copyright 2010-2020, Google Inc.
+// Copyright 2020, Coooooooozy
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -37,7 +38,6 @@
 #include "base/util.h"
 #include "dictionary/dictionary_token.h"
 #include "dictionary/system/words_info.h"
-#include "absl/strings/string_view.h"
 
 namespace mozc {
 namespace dictionary {
@@ -477,59 +477,133 @@ namespace {
 // Swap the area for Hiragana, prolonged sound mark and middle dot with
 // the one for control codes and alphabets.
 //
-// U+3041 - U+305F ("ぁ" - "た") <=> U+0001 - U+001F
-// U+3060 - U+3095 ("だ" - "ゕ") <=> U+0040 - U+0075
-// U+30FB - U+30FC ("・" - "ー") <=> U+0076 - U+0077
+// U+3041 - U+305F ("ぁ" - "た") <=> U+0001 - U+001F control character
+// U+3060 - U+3095 ("だ" - "ゕ") <=> U+0040 - U+0075 @-u
+// U+30FB - U+30FC ("・",  "ー") <=> U+0076 - U+0077 v-w
+// U+30A2          ("ア")        <=> U+0078 x
+// U+30AB          ("カ")        <=> U+0079 y
+// U+30B5          ("サ")        <=> U+007A z
+// U+30BF          ("タ")        <=> U+007C |
+// U+30CA          ("ナ")        <=> U+0021 !
+// U+30CF          ("ハ")        <=> U+0022 "
+// U+30DE          ("マ")        <=> U+0024 $
+// U+30E4          ("ヤ")        <=> U+0025 %
+// U+30E9          ("ラ")        <=> U+0026 &
+// U+30EF          ("ワ")        <=> U+0027 '
+// U+30AF          ("ク")        <=> U+0028 (
+// U+30B9          ("ス")        <=> U+0029 )
+// U+30C4          ("ツ")        <=> U+002A *
+// U+30F3          ("ン")        <=> U+002B +
 //
 // U+0020 - U+003F are left intact to represent numbers and hyphen in 1 byte.
 void EncodeDecodeKeyImpl(const absl::string_view src, std::string *dst) {
-  for (ConstChar32Iterator iter(src); !iter.Done(); iter.Next()) {
-    static_assert(sizeof(uint32) == sizeof(char32),
-                  "char32 must be 32-bit integer size.");
-    uint32 code = iter.Get();
-    int32 offset = 0;
-    if ((code >= 0x0001 && code <= 0x001f) ||
-        (code >= 0x3041 && code <= 0x305f)) {
-      offset = 0x3041 - 0x0001;
-    } else if ((code >= 0x0040 && code <= 0x0075) ||
-               (code >= 0x3060 && code <= 0x3095)) {
-      offset = 0x3060 - 0x0040;
-    } else if ((code >= 0x0076 && code <= 0x0077) ||
-               (code >= 0x30FB && code <= 0x30FC)) {
-      offset = 0x30FB - 0x0076;
+    for (ConstChar32Iterator iter(src); !iter.Done(); iter.Next()) {
+        static_assert
+        (   sizeof(uint32) == sizeof(char32)
+        ,   "char32 must be 32-bit integer size."
+        );
+        uint32 code = iter.Get();
+        int32 offset = 0;
+        if
+        (   (0x0001 <= code && code <= 0x001f)
+        ||  (0x3041 <= code && code <= 0x305f)
+        ) {
+            offset = 0x3041 - 0x0001;
+        } else if
+        (   (0x0040 <= code && code <= 0x0075)
+        ||  (0x3060 <= code && code <= 0x3095)
+        ) {
+            offset = 0x3060 - 0x0040;
+        } else if
+        (   (0x0076 <= code && code <= 0x0077)
+        ||  (0x30FB <= code && code <= 0x30FC)
+        ) {
+            offset = 0x30FB - 0x0076;
+        } else if((0x0078 == code)||(0x30A2 == code)) {
+            offset = 0x30A2 - 0x0078;
+        } else if((0x0079 == code)||(0x30AB == code)) {
+            offset = 0x30AB - 0x0079;
+        } else if((0x007A == code)||(0x30B5 == code)) {
+            offset = 0x30B5 - 0x007A;
+        } else if((0x007C == code)||(0x30BF == code)) {
+            offset = 0x30BF - 0x007C;
+        } else if((0x0021 == code)||(0x30CA == code)) {
+            offset = 0x30CA - 0x0021;
+        } else if((0x0022 == code)||(0x30CF == code)) {
+            offset = 0x30CF - 0x0022;
+        } else if((0x0024 == code)||(0x30DE == code)) {
+            offset = 0x30DE - 0x0024;
+        } else if((0x0025 == code)||(0x30E4 == code)) {
+            offset = 0x30E4 - 0x0025;
+        } else if((0x0026 == code)||(0x30E9 == code)) {
+            offset = 0x30E9 - 0x0026;
+        } else if((0x0027 == code)||(0x30EF == code)) {
+            offset = 0x30EF - 0x0027;
+        } else if((0x0028 == code)||(0x30AF == code)) {
+            offset = 0x30AF - 0x0028;
+        } else if((0x0029 == code)||(0x30B9 == code)) {
+            offset = 0x30B9 - 0x0029;
+        } else if((0x002A == code)||(0x30C4 == code)) {
+            offset = 0x30C4 - 0x002A;
+        } else if((0x002B == code)||(0x30F3 == code)) {
+            offset = 0x30F3 - 0x002B;
+        }
+        if (code < 0x80) {
+            code += offset;
+        } else {
+            code -= offset;
+        }
+        DCHECK_GT(code, 0);
+        Util::UCS4ToUTF8Append(code, dst);
     }
-    if (code < 0x80) {
-      code += offset;
-    } else {
-      code -= offset;
-    }
-    DCHECK_GT(code, 0);
-    Util::UCS4ToUTF8Append(code, dst);
-  }
 }
 
 size_t GetEncodedDecodedKeyLengthImpl(const absl::string_view src) {
-  size_t size = src.size();
-  for (ConstChar32Iterator iter(src); !iter.Done(); iter.Next()) {
-    static_assert(sizeof(uint32) == sizeof(char32),
-                  "char32 must be 32-bit integer size.");
-    uint32 code = iter.Get();
-    if ((code >= 0x3041 && code <= 0x3095) ||
-        (code >= 0x30FB && code <= 0x30FC)) {
-      // This code point takes three bytes in UTF-8 encoding,
-      // and will be swapped with a code point which takes one byte in UTF-8
-      // encoding.
-      size -= 2;
-      continue;
+    size_t size = src.size();
+    for (   ConstChar32Iterator iter(src)
+        ;   !iter.Done()
+        ;   iter.Next()
+    ) {
+        static_assert
+        (   sizeof(uint32) == sizeof(char32)
+        ,   "char32 must be 32-bit integer size."
+        );
+        uint32 code = iter.Get();
+        if  (   (0x3041 <= code && code <= 0x3095)
+            ||  (0x30FB <= code && code <= 0x30FC)
+            ||  (code == 0x30A2)
+            ||  (code == 0x30AB)
+            ||  (code == 0x30B5)
+            ||  (code == 0x30BF)
+            ||  (code == 0x30CA)
+            ||  (code == 0x30CF)
+            ||  (code == 0x30DE)
+            ||  (code == 0x30E4)
+            ||  (code == 0x30E9)
+            ||  (code == 0x30EF)
+            ||  (code == 0x30AF)
+            ||  (code == 0x30B9)
+            ||  (code == 0x30C4)
+            ||  (code == 0x30F3)
+        ) {
+            // This code point takes three bytes in UTF-8 encoding,
+            // and will be swapped with a code point which takes one byte in UTF-8
+            // encoding.
+            size -= 2;
+            continue;
+        }
+        if  (   (0x0001 <= code && code <= 0x001F)
+            ||  (0x0040 <= code && code <= 0x007A)
+            ||  (code == 0x007C)
+            ||  (0x0021 <= code && code <= 0x0022)
+            ||  (0x0024 <= code && code <= 0x002B)
+        ) {
+            // Vice versa on above.
+            size += 2;
+            continue;
+        }
     }
-    if ((code >= 0x0001 && code <= 0x001F) ||
-        (code >= 0x0040 && code <= 0x0077)) {
-      // Vice versa on above.
-      size += 2;
-      continue;
-    }
-  }
-  return size;
+    return size;
 }
 
 // Return flags for token
