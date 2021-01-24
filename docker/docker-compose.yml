@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: AGPL-3.0
+# Copyright (C) 2020 Coooooooozy
+
+version: '3'
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/home/builder/workspace/kurage
+

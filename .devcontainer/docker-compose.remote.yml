@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: AGPL-3.0
+# Copyright (C) 2020 Coooooooozy
+
+version: '3'
+services:
+  dev:
+    tty: true
+    command: sleep infinity
