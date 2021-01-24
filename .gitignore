@@ -11,10 +11,10 @@
 /docker/ubuntu20.04/src/
 
 # Mozc build artifacts by Bazel
-/src/bazel-bin/
-/src/bazel-out/
-/src/bazel-src/
-/src/bazel-testlogs/
+/src/bazel-bin
+/src/bazel-out
+/src/bazel-src
+/src/bazel-testlogs
 
 # Mozc build artifacts by GYP
 /src/out_android/
